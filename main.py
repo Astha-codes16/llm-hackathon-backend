@@ -26,9 +26,10 @@ import os
 import shutil
 import fitz
 import openai
+import fitz 
 import requests
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-import requests
+
 from langchain_community.vectorstores import FAISS
 from dotenv import load_dotenv
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -37,6 +38,10 @@ app = FastAPI()
 security=HTTPBearer()
 load_dotenv()
 Api_key=os.getenv("Api_key")
+vectorStore = None #global variable
+# Folder to store uploaded documents
+UPLOAD_DIR = "uploaded_files"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 @app.get("/")
 def read_root():
     return {"message": "FastAPI app is live!"}
@@ -45,7 +50,7 @@ class HackerxRequest(BaseModel):
     document:str
 
     
-import requests
+
 
 def get_llm_response(prompt):
     headers = {
@@ -60,19 +65,33 @@ def get_llm_response(prompt):
         "top_p": 0.7,
         "max_tokens": 256
     }
-
+    print("Api_key:",os.getenv("Api_key"))
+    if not Api_key:
+        raise RuntimeError("Api key not found")
     response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=data)
     response.raise_for_status()
     return response.json()["choices"][0]["message"]["content"].strip()
 
-vectorStore = None #global variable
-# Folder to store uploaded documents
-UPLOAD_DIR = "uploaded_files"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+
 
 
     # from here
-    
+def extract_text_from_pdf(file_path):
+    doc = fitz.open(file_path)
+    text = ""
+    for page in doc:
+        text += page.get_text()
+    doc.close()
+    return text
+
+def chunk_text(text):
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=500,        # Each chunk ~500 characters
+        chunk_overlap=100      # 100 chars repeated between chunks (for context)
+    )
+    chunks = text_splitter.split_text(text)
+    return chunks
+   
 @app.post("/hackrx/run")
 async def hackrx_run(
     request: HackerxRequest,
@@ -118,22 +137,7 @@ async def hackrx_run(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing document: {str(e)}")
 
-import fitz  # PyMuPDF
-def extract_text_from_pdf(file_path):
-    doc = fitz.open(file_path)
-    text = ""
-    for page in doc:
-        text += page.get_text()
-    doc.close()
-    return text
-
-def chunk_text(text):
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=500,        # Each chunk ~500 characters
-        chunk_overlap=100      # 100 chars repeated between chunks (for context)
-    )
-    chunks = text_splitter.split_text(text)
-    return chunks
+ # PyMuPDF
 
 
 
