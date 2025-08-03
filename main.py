@@ -30,11 +30,13 @@ import requests
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import requests
 from langchain_community.vectorstores import FAISS
-
+from dotenv import load_dotenv
 from langchain_huggingface import HuggingFaceEmbeddings
-API_key="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"
+
 app = FastAPI()
 security=HTTPBearer()
+load_dotenv()
+Api_key=os.getenv("Api_key")
 class HackerxRequest(BaseModel):
     questions:List[str]
     document:str
@@ -44,7 +46,7 @@ import requests
 
 def get_llm_response(prompt):
     headers = {
-        "Authorization": "Bearer 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",  # your full OpenRouter API key
+        "Authorization": "Bearer ${Api_key}",  
         "Content-Type": "application/json"
     }
 
@@ -77,7 +79,7 @@ async def hackrx_run(
     
     # Now you can validate the token if needed
     print("Received Token:", token)
-    if credentials.scheme!="Bearer" or token!=API_key:
+    if credentials.scheme!="Bearer" or token!=Api_key:
         raise HTTPException(status_code=401,detail="Unauthorized")
     # Continue with your logic
     try:
