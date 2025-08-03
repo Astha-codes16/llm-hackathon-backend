@@ -37,6 +37,9 @@ app = FastAPI()
 security=HTTPBearer()
 load_dotenv()
 Api_key=os.getenv("Api_key")
+@app.get("/")
+def read_root():
+    return {"message": "FastAPI app is live!"}
 class HackerxRequest(BaseModel):
     questions:List[str]
     document:str
@@ -46,7 +49,7 @@ import requests
 
 def get_llm_response(prompt):
     headers = {
-        "Authorization": "Bearer ${Api_key}",  
+        "Authorization": f"Bearer {Api_key}",  
         "Content-Type": "application/json"
     }
 
