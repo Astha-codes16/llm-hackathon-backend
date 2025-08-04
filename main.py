@@ -63,7 +63,7 @@ def get_llm_response(prompt):
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.3,
         "top_p": 0.7,
-        "max_tokens": 256
+        "max_tokens": 100
     }
     
     if not Api_key:
