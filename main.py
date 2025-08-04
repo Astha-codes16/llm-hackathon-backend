@@ -94,21 +94,28 @@ def chunk_text(text):
    
 @app.post("/hackrx/run")
 async def hackrx_run(request: HackerxRequest):
+    pdf_url=request.document
 
     try:
         # Download the PDF from the link
         logging.info("Starting PDF download....")
-        pdf_url=request.document
+        
         response = requests.get(pdf_url)
         logging.info(f"PDF download response code:{response.status_code}")
         if response.status_code != 200:
             raise HTTPException(status_code=400, detail="Failed to download PDF from the link.")
-
+        pdf_bytes=response.content
+    except Exception as e:
+        raise HTTPException(status_code=400,detail=f"Error downloading pdf:{str(e)}")
+    if len(pdf_bytes)> 2*1024*1024:
+        raise HTTPException(status_code=400,detail="PDF too large.Max size=2MB")    
         # Save to local file
+    try:    
         file_path = os.path.join("uploaded_files", "linked_document.pdf")
         with open(file_path, "wb") as f:
             f.write(response.content)
         logging.info("PDF saved")
+    
         # Extract, chunk, and embed
         extracted_text = extract_text_from_pdf(file_path)
         logging.info("Text extracted")
