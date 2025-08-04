@@ -24,7 +24,7 @@ from fastapi import Header
 from typing import List
 import os
 import shutil
-
+import logging
 import openai
 import fitz 
 import requests
@@ -33,7 +33,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from dotenv import load_dotenv
 from langchain_huggingface import HuggingFaceEmbeddings
-
+logging.basicConfig(level=logging.INFO)
 app = FastAPI()
 
 load_dotenv()
@@ -97,9 +97,10 @@ async def hackrx_run(request: HackerxRequest):
 
     try:
         # Download the PDF from the link
+        logging.info("Starting PDF download....")
         pdf_url=request.document
         response = requests.get(pdf_url)
-        
+        logging.info(f"PDF download response code:{response.status_code}")
         if response.status_code != 200:
             raise HTTPException(status_code=400, detail="Failed to download PDF from the link.")
 
@@ -107,12 +108,15 @@ async def hackrx_run(request: HackerxRequest):
         file_path = os.path.join("uploaded_files", "linked_document.pdf")
         with open(file_path, "wb") as f:
             f.write(response.content)
-
+        logging.info("PDF saved")
         # Extract, chunk, and embed
         extracted_text = extract_text_from_pdf(file_path)
+        logging.info("Text extracted")
         chunks = chunk_text(extracted_text)
+        logging.info("Text chunked")
         embedding_model = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
         vectorStore = FAISS.from_texts(chunks, embedding_model)
+        logging.info("Embeddings created")
         answers=[]
         for question in request.questions:
 
@@ -126,6 +130,7 @@ async def hackrx_run(request: HackerxRequest):
         }
 
     except Exception as e:
+        logging.exception("Error occuredduring processing")
         raise HTTPException(status_code=500, detail=f"Error processing document: {str(e)}")
 
  # PyMuPDF
