@@ -31,13 +31,13 @@ import requests
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 from langchain_community.vectorstores import FAISS
-
+from dotenv import load_dotenv
 from langchain_huggingface import HuggingFaceEmbeddings
 
 app = FastAPI()
 
-
-Api_key="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"
+load_dotenv()
+Api_key=os.getenv("Api_key")
 vectorStore = None #global variable
 # Folder to store uploaded documents
 UPLOAD_DIR = "uploaded_files"
