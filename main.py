@@ -18,26 +18,26 @@
 #     else:
 #         raise HTTPException(status_code=404,detail="item not found")
 from fastapi import FastAPI, UploadFile,File,HTTPException,Depends,status,Security
-from fastapi.security import HTTPBearer,HTTPAuthorizationCredentials
+
 from pydantic import BaseModel
 from fastapi import Header
 from typing import List
 import os
 import shutil
-import fitz
+
 import openai
 import fitz 
 import requests
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 from langchain_community.vectorstores import FAISS
-from dotenv import load_dotenv
+
 from langchain_huggingface import HuggingFaceEmbeddings
 
 app = FastAPI()
-security=HTTPBearer()
-load_dotenv()
-Api_key=os.getenv("Api_key")
+
+
+Api_key="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"
 vectorStore = None #global variable
 # Folder to store uploaded documents
 UPLOAD_DIR = "uploaded_files"
@@ -65,7 +65,7 @@ def get_llm_response(prompt):
         "top_p": 0.7,
         "max_tokens": 256
     }
-    print("Api_key:",os.getenv("Api_key"))
+    
     if not Api_key:
         raise RuntimeError("Api key not found")
     response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=data)
@@ -93,17 +93,8 @@ def chunk_text(text):
     return chunks
    
 @app.post("/hackrx/run")
-async def hackrx_run(
-    request: HackerxRequest,
-    credentials: HTTPAuthorizationCredentials = Depends(security)
-):
-    token = credentials.credentials  # This will give you the token part from "Bearer <token>"
-    
-    # Now you can validate the token if needed
-    print("Received Token:", token)
-    if credentials.scheme!="Bearer" or token!=Api_key:
-        raise HTTPException(status_code=401,detail="Unauthorized")
-    # Continue with your logic
+async def hackrx_run(request: HackerxRequest):
+
     try:
         # Download the PDF from the link
         pdf_url=request.document
