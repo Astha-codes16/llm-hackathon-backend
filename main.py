@@ -37,7 +37,7 @@ from langchain_huggingface import HuggingFaceEmbeddings
 app = FastAPI()
 
 load_dotenv()
-Api_key=os.getenv("Api_key")
+Api_key=os.getenv("API_KEY")
 vectorStore = None #global variable
 # Folder to store uploaded documents
 UPLOAD_DIR = "uploaded_files"
